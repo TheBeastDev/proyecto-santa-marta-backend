@@ -1,4 +1,5 @@
 import { PrismaClient, OrderStatus, PaymentMethod } from '@prisma/client';
+import { notificationService } from './notificationService';
 
 const prisma = new PrismaClient();
 
@@ -48,6 +49,12 @@ export const orderService = {
       where: { cartId: cart.id },
     });
 
+    // Create a notification for the user
+    await notificationService.createNotification(
+      userId,
+      `Your order #${order.orderNumber} has been placed successfully!`
+    );
+
     return order;
   },
 
@@ -74,9 +81,18 @@ export const orderService = {
   },
 
   async updateOrderStatus(orderId: string, status: OrderStatus) {
-    return prisma.order.update({
+    const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: { status },
+      include: { user: true } // Include user to get userId for notification
     });
+
+    // Create a notification for the user about the status update
+    await notificationService.createNotification(
+      updatedOrder.userId,
+      `Your order #${updatedOrder.orderNumber} status has been updated to ${status}.`
+    );
+
+    return updatedOrder;
   },
 };
