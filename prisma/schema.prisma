@@ -22,6 +22,7 @@ model User {
   address      String?
   phone        String?
   orders       Order[]
+  notifications Notification[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   shoppingCart ShoppingCart?
@@ -117,4 +118,13 @@ enum PaymentMethod {
   CREDIT_CARD
   DEBIT_CARD
   CASH
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
