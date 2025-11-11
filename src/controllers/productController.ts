@@ -90,3 +90,17 @@ export const deleteProduct = async (
     next(error);
   }
 };
+
+export const getProductsByCategoryId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { categoryId } = req.params;
+    const products = await productService.getProductsByCategoryId(categoryId);
+    res.status(200).json(products);
+  } catch (error) {
+    next(error);
+  }
+};
