@@ -14,15 +14,40 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      Role     @default(USER)
-  orders    Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String
+  password     String
+  role         Role          @default(USER)
+  address      String?
+  phone        String?
+  orders       Order[]
+  notifications Notification[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  shoppingCart ShoppingCart?
 }
+  
+  model ShoppingCart {
+    id        String     @id @default(uuid())
+    user      User       @relation(fields: [userId], references: [id])
+    userId    String     @unique // Each user has one cart
+    cartItems CartItem[]
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+  }
+  
+  model CartItem {
+    id           String       @id @default(uuid())
+    cart         ShoppingCart @relation(fields: [cartId], references: [id])
+    cartId       String
+    product      Product      @relation(fields: [productId], references: [id])
+    productId    String
+    quantity     Int
+    // Ensure a product can only appear once in a given cart
+    @@unique([cartId, productId])
+  }
+  
 
 model Product {
   id          String      @id @default(uuid())
@@ -32,6 +57,7 @@ model Product {
   stock       Int
   image       String?
   orderItems  OrderItem[]
+  cartItems   CartItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   category    Category    @relation(fields: [categoryId], references: [id])
@@ -50,14 +76,18 @@ model Category {
 }
 
 model Order {
-  id         String      @id @default(uuid())
-  user       User        @relation(fields: [userId], references: [id])
-  userId     String
-  total      Float
-  status     OrderStatus @default(PENDING)
-  orderItems OrderItem[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique @default(cuid())
+  user            User        @relation(fields: [userId], references: [id])
+  userId          String
+  total           Float
+  status          OrderStatus @default(PENDING)
+  paymentMethod   PaymentMethod
+  deliveryAddress String
+  phone           String
+  orderItems      OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model OrderItem {
@@ -77,6 +107,24 @@ enum Role {
 
 enum OrderStatus {
   PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
   COMPLETED
   CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
