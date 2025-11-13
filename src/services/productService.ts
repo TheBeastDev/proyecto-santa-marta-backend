@@ -29,3 +29,11 @@ export const deleteProduct = async (id: string): Promise<Product | null> => {
     where: { id },
   });
 };
+
+export const getProductsByCategoryId = async (categoryId: string): Promise<Product[]> => {
+  return prisma.product.findMany({
+    where: {
+      categoryId,
+    },
+  });
+};
